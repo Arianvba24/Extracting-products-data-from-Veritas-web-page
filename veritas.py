@@ -33,17 +33,18 @@ class Spider():
     
     def from_dataframe_to_data(self,df,extension,adress):
         self.extension = extension
-        self.df = df 
+        self.df = df
+        self.adress = adress
         if self.extension == "csv":
-            return self.df.to_csv(adress,index = False)
+            return self.df.to_csv(self.adress,index = False)
         elif self.extension == "xlsx":
-            return self.df.to_excel(adress,index = False)
+            return self.df.to_excel(self.adress,index = False)
         elif self.extension == "sql":
-            return self.df.to_sql(adress,index = False)
+            return self.df.to_sql(self.adress,index = False)
         elif self.extension == "json":
-            return self.df.to_json(adress,index = False)
+            return self.df.to_json(self.adress,index = False)
         elif self.extension == "parquet":
-            return self.df.to_parquet(adress,index = False)
+            return self.df.to_parquet(self.adress,index = False)
         
     async def javascript_multidata_extract(self):
         """
@@ -82,25 +83,40 @@ class Spider():
 
             bs = BeautifulSoup(html,"lxml")
             soup = bs.find_all("div",class_="info-articulo")
+            soup_images = bs.find_all("div",class_="imgwrap")
 #         Loop straight to labels(a,h1,h2,div) or go to the class
 #         Defining variables to create the dictionary and afeterwards the dataframe-----------
             title_value = []
             brand_value = []
             price_value = []
             price_kg_value = []
+            image_value = []
             
-            for text in soup:
+            for i,text in enumerate(soup):
                 title = text.find("p",class_="nombre").text
                 brand = text.find("p",class_="marca").text
                 
                 price = buscar_segundo_numero(text.find("p",class_="precio").text)
                 # print(text)
                 price_kg = buscar_numero(text.find("div",class_="texto-porKilo").text)
+                image = soup_images[i].img.attrs["src"]
     #             Stablishing dictionary's values for Dataframe-------------------------------
                 title_value.append(title)
                 brand_value.append(brand)
                 price_value.append(price)
                 price_kg_value.append(price_kg)
+                if "comerzzia" in image:
+                    image_value.append("No image available")
+                else:
+                    image_value.append(image)
+
+            # image_value = list(filter(lambda x: "comerzzia" not in x,image_value1))
+            print(image_value)
+            print(len(image_value))
+            print(len(title_value))
+                # print(image)
+                # break
+                # image_value.append(image.img.attrs["src"])
                 # print(title_value)
     #         Creating Pandas Dataframe
             await browser.close()
@@ -109,7 +125,8 @@ class Spider():
                 "Title" : title_value,
                 "Brand" : brand_value,
                 "Price" : price_value,
-                "Price_kg" : price_kg_value
+                "Price_kg" : price_kg_value,
+                "Image" : image_value
                 
             }
 
@@ -130,6 +147,7 @@ if __name__=="__main__":
     spider = Spider()
     
     df = spider.run_javascript_multidata_extract()
+    spider.from_dataframe_to_data(df=df,extension="xlsx",adress=r"C:\Users\Cash\Proyectos\Web Scrapping\Veritas\outcome.xlsx")
     print(df)
 
 
