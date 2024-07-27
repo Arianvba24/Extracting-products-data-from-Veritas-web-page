@@ -1,0 +1,4 @@
+beautifulsoup4==4.9.3
+pandas==2.2.2
+playwright==1.39.0
+requests_html==0.10.0
